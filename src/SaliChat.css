@@ -1,0 +1,37 @@
+@import '~antd/dist/antd.css';
+
+.element {
+    position: relative;
+    overflow: scroll;
+    margin: 2vw 5vw 0;
+    height: 70vh;
+}
+
+.messageContent {
+    height: 100% ;
+}
+
+.ant-list-item-meta-description {
+    display:inline;
+    float: right;
+}
+
+.ant-list-item-meta-title {
+    display: inline;
+    margin-right: 20px;
+}
+
+.usernameDisplay {
+    display: inline;
+    margin-right: 20px;
+    color: white;
+    margin-left: 20px;
+    font-size: large;
+}
+
+.logout {
+    color: white;
+    float: right;
+    display: inline;
+    font-size: small;
+}
