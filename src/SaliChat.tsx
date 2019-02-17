@@ -1,28 +1,42 @@
-import {Avatar, Icon, Input, Layout, List, message} from 'antd';
+import {Avatar, Icon, Input, Layout, List, Menu, message} from 'antd';
+import axios from "axios";
 import * as React from 'react';
-import {Element} from "react-scroll";
+import {Element, scroller} from "react-scroll";
+import Message from "./Module/Message";
+import {parseTransmission} from "./Module/Post";
+import ServerCommand from "./Module/ServerCommand";
+import User from "./Module/User";
 import './SaliChat.css';
 
-const {Header, Content, Footer} = Layout;
-const fuckTSlint: string[] = [];//  为了让制杖tslint不把空数组识别为never
+const {Header, Footer, Content, Sider} = Layout;
 class SaliChat extends React.Component<{ username: string }> {
-    public username: string = '';
-    public webSocket: WebSocket;
-    /* 我有必要为这个代码加一个注释。我只能说ts实在是太牛逼了，搞求不来。
-    * tslint自动把空数组识别为never类型也就算了，
-    * 你为啥还不允许在state数组里存入子对象？？？
-    * 来来来，react是哪个制杖发明的，我想和你好好谈谈！！！！*/
+    public listLength = 0;// 为了使滚动能够自动到底，使用listLength变量以达到自动实现目的
+    public username: string = '';// 由props传递而来，是用户的用户名
+    public webSocket: WebSocket;// 这是客户端与服务器建立的连接
     public state = {
-        messageData: fuckTSlint,
+        messageData: [] as string[],
         connectionEstablishment: 'loading',
         cannotUseButton: true,
-        messageWaitForSend: ''
+        messageWaitForSend: '',
+        userNameList: [] as string[]
     };
 
     constructor(Props) {
         super(Props);
         this.username = Props.username;
-        this.webSocket = new WebSocket('ws://localhost:8081'); // 建立ws连接
+        axios.get("http://localhost:8080/online",{headers:{'Accept': '*/*','Content-Type':'text/plain'}})
+            .then(response=> {
+                return response.data.map(userString => {
+                    return User.parse(userString).username
+                })
+        }).then((retUserList:string[]) => {
+            this.state.userNameList = retUserList.filter((value:string)=>{
+                return (value!==this.username)
+            })
+        }).catch((err)=>{
+            console.error(err);
+        });
+        this.webSocket = new WebSocket('ws://localhost:8081/' + encodeURI(Props.username)); // 建立ws连接
         this.webSocket.onopen = () => {
             this.setState({connectionEstablishment: 'check-circle', cannotUseButton: false});
         };
@@ -30,36 +44,33 @@ class SaliChat extends React.Component<{ username: string }> {
             this.setState({connectionEstablishment: 'close-circle', cannotUseButton: true})
         };
         this.webSocket.onmessage = (ev => {
-            this.addPiece(ev.data)
+            parseTransmission(ev.data,
+                (() => {
+                    this.addMessage(ev.data);
+                    this.listLength += 250;
+                    scroller.scrollTo('messageContainerScroll', {
+                        offset: this.listLength,
+                        containerId: 'containerElement'
+                    });
+                }),(
+                    (command:ServerCommand)=>{
+                        switch (command.command) {
+                            case "login":
+                                this.addUser(command.parameters.user);
+                                break;
+                            case "logout":
+                                this.deleteUser(command.parameters.user);
+                                break;
+                        }
+                    }
+                )
+                );
         });
         this.webSocket.onerror = () => {
             message.error("error");
             this.setState({connectEstablishment: 'close-circle', cannotUseButton: true})
         };
     }
-
-    public showItem = (item) => {
-        const c = JSON.parse(item);
-        return <List.Item>
-            <List.Item.Meta title={c.poster} description={(new Date(c.time)).toLocaleTimeString()}/>
-            {c.message}
-        </List.Item>
-    };
-    public makeMessage = (poster: string, time: Date, messagel: string) => {
-        return JSON.stringify({poster: poster, time: time.toString(), message: messagel})
-    };
-    public addPiece = (piece: string) => {
-        // const a = this.state.messageData;
-        // a.push(piece);
-        this.setState({messageData: this.state.messageData.concat([piece])})
-    };
-    public sendMessage = (messagel) => {
-        this.webSocket.send(this.makeMessage(this.username, new Date(), messagel));
-        this.setState({messageWaitForSend: ''})
-    };
-    public messageChange = (event) => {
-        this.setState({messageWaitForSend: event.target.value})
-    };
 
     public render(): React.ReactNode {
         return (<Layout className="layout">
@@ -69,26 +80,82 @@ class SaliChat extends React.Component<{ username: string }> {
                 </div>
                 <div className={"logout"}><Icon type="logout"/> Logout</div>
             </Header>
-            <Content className={"messageContent"}>
-                <Element
-                    name="test7"
-                    className="element"
-                    id="containerElement">
-                    <List
-                        itemLayout="vertical"
-                        bordered={true}
-                        dataSource={this.state.messageData}
-                        renderItem={this.showItem}
-                        className={"messageList"}
-                    />
-                </Element>
-                <Input.Search placeholder="message here" enterButton="Send" size="large" onSearch={this.sendMessage}
-                              onChange={this.messageChange} value={this.state.messageWaitForSend} disabled={this.state.cannotUseButton}/>
+            <Content>
+                <Layout>
+                    <Sider width={200}>
+                        <Menu
+                            mode="inline"
+                            defaultSelectedKeys={['1']}
+                            defaultOpenKeys={['sub1']}
+                            style={{height: '100%'}}>
+                            {this.state.userNameList.map((value, index) => {
+                                return (
+                                    <Menu.Item key={index}>
+                                        <Icon type={'user'}/>
+                                        <span>{value}</span>
+                                    </Menu.Item>
+                                )
+                            })}
+                        </Menu>
+                    </Sider>
+                    <Content className={"messageContent"}>
+                        <Element
+                            name="messageContainerScroll"
+                            className="element"
+                            id="containerElement">
+                            <List
+                                itemLayout="vertical"
+                                bordered={true}
+                                dataSource={this.state.messageData}
+                                renderItem={this.showItem}
+                                className={"messageList"}
+                            />
+                        </Element>
+                        <Input.Search placeholder="message here" enterButton="Send" size="large"
+                                      onSearch={this.sendMessage}
+                                      onChange={this.messageChange} value={this.state.messageWaitForSend}
+                                      disabled={this.state.cannotUseButton}/>
+                    </Content>
+                </Layout>
             </Content>
             <Footer style={{textAlign: 'center'}}>
                 Sali-chat ©2019 Created by Neboer
             </Footer>
         </Layout>);
+    }
+
+    // private showUser = this.state.userNameList.map((value, index) => {
+    //     return (
+    //         <Menu.Item key={index}>
+    //             <Icon type={'user'}/>
+    //             <span>{value}</span>
+    //         </Menu.Item>
+    //     )
+    // });
+    private showItem = (item) => {
+        const messageInList = Message.parse(item);
+        return <List.Item>
+            <List.Item.Meta title={messageInList.poster} description={messageInList.time.toLocaleTimeString()}/>
+            {messageInList.message}
+        </List.Item>
+    };
+    private sendMessage = (messagel) => {
+        (new Message(this.username, new Date(), messagel)).send(this.webSocket);
+        this.setState({messageWaitForSend: ''})
+    };
+    private messageChange = (event) => {
+        this.setState({messageWaitForSend: event.target.value})
+    };
+    private addMessage = (piece: string) => {
+        this.setState({messageData: this.state.messageData.concat([piece])})
+    };
+    private addUser = (user:User) => {
+        this.setState({userNameList:this.state.userNameList.concat([user.username])});
+    };
+    private deleteUser = (user:User) => {
+        const newList = this.state.userNameList;
+        newList.splice(newList.indexOf(user.username),1);
+        this.setState({userNameList:newList});
     }
 }
 
