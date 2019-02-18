@@ -2,12 +2,12 @@ import {Avatar, Icon, Input, Layout, List, Menu, message} from 'antd';
 import axios from "axios";
 import * as React from 'react';
 import {Element, scroller} from "react-scroll";
+import {environment,url} from './environment.json'
 import Message from "./Module/Message";
 import {parseTransmission} from "./Module/Post";
 import ServerCommand from "./Module/ServerCommand";
 import User from "./Module/User";
 import './SaliChat.css';
-
 const {Header, Footer, Content, Sider} = Layout;
 class SaliChat extends React.Component<{ username: string }> {
     public listLength = 0;// 为了使滚动能够自动到底，使用listLength变量以达到自动实现目的
@@ -24,7 +24,7 @@ class SaliChat extends React.Component<{ username: string }> {
     constructor(Props) {
         super(Props);
         this.username = Props.username;
-        axios.get("http://localhost:8080/online",{headers:{'Accept': '*/*','Content-Type':'text/plain'}})
+        axios.get("http://"+url[environment]+":8080/online",{headers:{'Accept': '*/*','Content-Type':'text/plain'}})
             .then(response=> {
                 return response.data.map(userString => {
                     return User.parse(userString).username
@@ -36,7 +36,7 @@ class SaliChat extends React.Component<{ username: string }> {
         }).catch((err)=>{
             console.error(err);
         });
-        this.webSocket = new WebSocket('ws://localhost:8081/' + encodeURI(Props.username)); // 建立ws连接
+        this.webSocket = new WebSocket('ws://'+url[environment]+':8081/' + encodeURI(Props.username)); // 建立ws连接
         this.webSocket.onopen = () => {
             this.setState({connectionEstablishment: 'check-circle', cannotUseButton: false});
         };

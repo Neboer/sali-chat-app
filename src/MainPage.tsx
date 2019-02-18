@@ -1,9 +1,9 @@
 import {Button, Icon, Input, message, Modal} from "antd";
 import axios from "axios";
-// import fetch from 'cross-fetch';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './App.css';
+import {environment, url} from "./environment.json";
 import SaliChat from './SaliChat';
 
 // import logo from './logo.svg';
@@ -17,7 +17,7 @@ class MainPage extends React.Component {
     };
     public handleLogin = () => { // 用户登录逻辑
         this.setState({loading: true});
-        axios.post("http://localhost:8080/login",{username:this.state.username},{headers:{'Accept': '*/*','Content-Type':'text/plain'}}).then(response=> {
+        axios.post("http://"+url[environment]+":8080/login",{username:this.state.username},{headers:{'Accept': '*/*','Content-Type':'text/plain'}}).then(response=> {
             switch(response.data){
                 case 'ok': {message.info("welcome,"+this.state.username);this.setState({loading:false});
                     ReactDOM.render(<SaliChat username = {this.state.username}/>,document.getElementById('root') as HTMLElement);break;

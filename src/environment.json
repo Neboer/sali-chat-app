@@ -1,0 +1,7 @@
+{
+  "environment": "develop",
+  "url": {
+    "develop": "localhost",
+    "production": "45.76.194.96"
+  }
+}
