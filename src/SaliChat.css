@@ -35,3 +35,16 @@
     display: inline;
     font-size: small;
 }
+
+.ant-menu-vertical {
+    height: auto;
+}
+
+.ant-layout-sider-trigger {
+    color: black;
+    background: white;
+}
+
+.user-sider {
+    background:white;
+ }

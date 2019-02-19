@@ -1,6 +1,6 @@
 # Sali-chat-app React
-[![Build Status](https://travis-ci.org/bootstrap-tagsinput/bootstrap-tagsinput.svg?branch=master)](https://travis-ci.org/bootstrap-tagsinput/bootstrap-tagsinput)
->沙粒聊天室React客户端3.0.1版，请配合2.0版服务端使用。
+![Build Status](https://travis-ci.org/bootstrap-tagsinput/bootstrap-tagsinput.svg?branch=master)
+>沙粒聊天室React客户端3.1版，请配合2.1版服务端使用。
 ## 基于React+tsx开发
 前端交互感觉流畅顺滑，更易于使用，开发和维护，代码十分易读。
 ## 采用Ant Design UI设计
