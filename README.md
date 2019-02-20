@@ -15,3 +15,31 @@
 几乎不用刻意适配，我们的css设计可以自动铺满您的设备屏幕
 ### 沙粒Sali聊天室，为了更好的沟通。
 项目试验上线地址 http://45.76.194.96:8082/
+### 项目部署流程
+ 1. 克隆整个仓库，然后进入
+    ```
+    git clone https://github.com/Neboer/sali-chat-app.git
+    cd sali-chat-app
+    ```
+ 2. 修改环境文件为部署环境
+    ```
+    vim src/environment.json
+    ```
+    将其中的environment改为production，并修改为您的ip地址。
+ 3. 安装依赖
+     ```
+     yarn
+     ```
+ 4. 使用Webpack打包
+    ```
+    yarn build
+    ```
+ 5. 构建docker镜像（替换yourname）
+    ```
+    docker build -t yourname .
+    ```
+ 6. 运行docker实例（替换yourname,yourport）
+    ```
+    docker run -d -it -p yourport:80 yourname
+    ```
+ 如果没有问题，运行```docker ps```可以查看到正在运行的实例。
