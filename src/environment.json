@@ -1,7 +1,8 @@
 {
-  "environment": "develop",
+  "environment": "neu",
   "url": {
     "develop": "localhost",
-    "production": "45.76.194.96"
+    "production": "45.76.194.96",
+    "neu": "58.154.164.124"
   }
 }

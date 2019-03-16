@@ -1,5 +1,5 @@
-import {Avatar, Icon, Input, Layout, List, Menu, message, Popover} from 'antd';
-import axios from "axios";
+import {Avatar, Button, Icon, Input, Layout, List, Menu, message, Popover} from 'antd';
+// import axios from "axios";
 import * as React from 'react';
 import {Element, scroller} from "react-scroll";
 import {environment, url} from './environment.json'
@@ -7,6 +7,7 @@ import Message from "./Module/Message";
 import {parseTransmission} from "./Module/Post";
 import ServerCommand from "./Module/ServerCommand";
 import User from "./Module/User";
+import {getOnlineUser} from "./Module/WebIO";
 import './SaliChat.css';
 
 const {Header, Footer, Content, Sider} = Layout;
@@ -27,23 +28,15 @@ class SaliChat extends React.Component<{ username: string }> {
     constructor(Props) {
         super(Props);
         this.username = Props.username;
-        axios.get("http://" + url[environment] + ":8080/online", {
-            headers: {
-                'Accept': '*/*',
-                'Content-Type': 'text/plain'
-            }
-        })
-            .then(response => {
-                return response.data.map(userString => {
-                    return User.parse(userString).username
+        getOnlineUser((userList: User[], err: Error) => {
+            if (err) {
+                console.error(err);
+            } else {
+                this.state.userNameList = userList.map((user: User) => {
+                    return user.username
                 })
-            }).then((retUserList: string[]) => {
-            this.state.userNameList = retUserList.filter((value: string) => {
-                return (value !== this.username)
-            })
-        }).catch((err) => {
-            message.error(err);
-            // console.error(err);
+            }
+            this.setState(this.state)
         });
         this.webSocket = new WebSocket('ws://' + url[environment] + ':8081/' + encodeURI(Props.username)); // 建立ws连接
         this.webSocket.onopen = () => {
@@ -65,7 +58,15 @@ class SaliChat extends React.Component<{ username: string }> {
                     (command: ServerCommand) => {
                         switch (command.command) {
                             case "login":
-                                this.addUser(command.parameters.user);
+                                if (command.parameters.user.username !== this.username) {
+                                    this.addUser(command.parameters.user);
+                                } else {
+                                    if (this.state.userNameList.filter((me: string) => {
+                                        return (me === this.username)
+                                    }).length === 0) { // 如果用户还没有在在线列表里
+                                        this.addUser(command.parameters.user)
+                                    }
+                                }
                                 break;
                             case "logout":
                                 this.deleteUser(command.parameters.user);
@@ -133,12 +134,13 @@ class SaliChat extends React.Component<{ username: string }> {
                                 className={"messageList"}
                             />
                         </Element>
-                        <Input.Search placeholder="message here" enterButton="Send" size="large"
-                                      onSearch={this.sendMessage}
-                                      onChange={this.messageChange} value={this.state.messageWaitForSend}
-                                      disabled={this.state.cannotUseButton}/>
+                        {/*<Input.Search placeholder="message here" enterButton="Send" size="large"*/}
+                        {/*onSearch={this.sendMessage}*/}
+                        {/*onChange={this.messageChange} value={this.state.messageWaitForSend}*/}
+                        {/*disabled={this.state.cannotUseButton}/>*/}
+                        <Input placeholder="Input your message" style={{width:window.innerWidth-200+'px'}}/>
+                        <Button type={'primary'}>Send</Button>
                     </Content>
-
                 </Layout>
             </Content>
             <Footer style={{textAlign: 'center'}}>
@@ -165,13 +167,13 @@ class SaliChat extends React.Component<{ username: string }> {
     private onCollapse = (collapsed) => {
         this.setState({siderCollapsed: collapsed});
     };
-    private sendMessage = (messagel) => {
-        (new Message(this.username, new Date(), messagel)).send(this.webSocket);
-        this.setState({messageWaitForSend: ''})
-    };
-    private messageChange = (event) => {
-        this.setState({messageWaitForSend: event.target.value})
-    };
+    // private sendMessage = (messagel) => {
+    //     (new Message(this.username, new Date(), messagel)).send(this.webSocket);
+    //     this.setState({messageWaitForSend: ''})
+    // };
+    // private messageChange = (event) => {
+    //     this.setState({messageWaitForSend: event.target.value})
+    // };
     private addMessage = (piece: string) => {
         this.setState({messageData: this.state.messageData.concat([piece])})
     };
