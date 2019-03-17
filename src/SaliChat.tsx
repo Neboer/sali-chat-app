@@ -17,12 +17,13 @@ class SaliChat extends React.Component<{ username: string }> {
     public username: string = '';// 由props传递而来，是用户的用户名
     public webSocket: WebSocket;// 这是客户端与服务器建立的连接
     public state = {
-        messageData: [] as string[],
+        messageData: [] as string[],// 用来展示历史消息
         connectionEstablishment: 'loading',
         cannotUseButton: true,
         messageWaitForSend: '',
         userNameList: [] as string[],
-        siderCollapsed: true
+        siderCollapsed: true,
+        windowWidth: window.innerWidth
     };
 
     constructor(Props) {
@@ -36,7 +37,10 @@ class SaliChat extends React.Component<{ username: string }> {
                     return user.username
                 })
             }
-            this.setState(this.state)
+            window.addEventListener('resize', () => {
+                this.setState({windowWidth: window.innerWidth})
+            });
+            this.setState(this.state)// 这句话很重要。
         });
         this.webSocket = new WebSocket('ws://' + url[environment] + ':8081/' + encodeURI(Props.username)); // 建立ws连接
         this.webSocket.onopen = () => {
@@ -49,7 +53,7 @@ class SaliChat extends React.Component<{ username: string }> {
             parseTransmission(ev.data,
                 (() => {
                     this.addMessage(ev.data);
-                    this.listLength += 250;
+                    this.listLength += 250;// 自动滚动
                     scroller.scrollTo('messageContainerScroll', {
                         offset: this.listLength,
                         containerId: 'containerElement'
@@ -138,8 +142,16 @@ class SaliChat extends React.Component<{ username: string }> {
                         {/*onSearch={this.sendMessage}*/}
                         {/*onChange={this.messageChange} value={this.state.messageWaitForSend}*/}
                         {/*disabled={this.state.cannotUseButton}/>*/}
-                        <Input placeholder="Input your message" style={{width:window.innerWidth-200+'px'}}/>
-                        <Button type={'primary'}>Send</Button>
+                        <Input placeholder="Input your message"
+                               style={{width: this.state.windowWidth - 150 - this.state.windowWidth / 25 + 'px'}}
+                               onChange={this.messageChange} value={this.state.messageWaitForSend}
+                               onPressEnter = {this.sendMessage}
+                        />
+                        <Button type={'primary'} style={{
+                            float: 'right',
+                            marginRight: this.state.windowWidth / 25 + 'px',
+                            position: "absolute"
+                        }} onClick={this.sendMessage}>Send</Button>
                     </Content>
                 </Layout>
             </Content>
@@ -166,14 +178,19 @@ class SaliChat extends React.Component<{ username: string }> {
     };
     private onCollapse = (collapsed) => {
         this.setState({siderCollapsed: collapsed});
+        if (collapsed) {
+            this.setState({windowWidth: this.state.windowWidth + 125})
+        } else {
+            this.setState({windowWidth: this.state.windowWidth - 125})
+        }
     };
-    // private sendMessage = (messagel) => {
-    //     (new Message(this.username, new Date(), messagel)).send(this.webSocket);
-    //     this.setState({messageWaitForSend: ''})
-    // };
-    // private messageChange = (event) => {
-    //     this.setState({messageWaitForSend: event.target.value})
-    // };
+    private sendMessage = () => {
+        (new Message(this.username, new Date(), this.state.messageWaitForSend)).send(this.webSocket);
+        this.setState({messageWaitForSend: ''})
+    };
+    private messageChange = (event) => {
+        this.setState({messageWaitForSend: event.target.value})
+    };
     private addMessage = (piece: string) => {
         this.setState({messageData: this.state.messageData.concat([piece])})
     };

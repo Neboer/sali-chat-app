@@ -1,6 +1,6 @@
 # Sali-chat-app React
 ![Build Status](https://travis-ci.org/bootstrap-tagsinput/bootstrap-tagsinput.svg?branch=master)
->沙粒聊天室React客户端3.1版，请配合2.1版服务端使用。
+>沙粒聊天室React客户端5.0开放公测版，请配合5.0版服务端使用。
 ## 基于React+tsx开发
 前端交互感觉流畅顺滑，更易于使用，开发和维护，代码十分易读。
 ## 采用Ant Design UI设计
@@ -42,4 +42,5 @@
     ```
     docker run -d -it -p yourport:80 yourname
     ```
- 如果没有问题，运行```docker ps```可以查看到正在运行的实例。
+ 如果没有问题，运行```docker ps```可以查看到正在运行的实例。<br>
+  对了，黑子确实蛮帅的。（这个开发者看超炮入迷了谁来救救他）
