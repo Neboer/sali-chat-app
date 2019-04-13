@@ -1,8 +1,10 @@
 import {Avatar, Button, Icon, Input, Layout, List, Menu, message, Popover} from 'antd';
 // import axios from "axios";
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import {Element, scroller} from "react-scroll";
 import {environment, url} from './environment.json'
+import MainPage from "./MainPage";
 import Message from "./Module/Message";
 import {parseTransmission} from "./Module/Post";
 import ServerCommand from "./Module/ServerCommand";
@@ -104,7 +106,8 @@ class SaliChat extends React.Component<{ username: string }> {
                                                                             placement="rightTop"><Icon
                     type={this.state.connectionEstablishment}/></Popover>
                 </div>
-                <div className={"logout"}><Icon type="logout"/>Logout</div>
+                <div className={"logout"} onClick={this.logout} style={{cursor: 'pointer'}}><Icon type="logout"/>Logout
+                </div>
             </Header>
             <Content>
                 <Layout>
@@ -145,7 +148,7 @@ class SaliChat extends React.Component<{ username: string }> {
                         <Input placeholder="Input your message"
                                style={{width: this.state.windowWidth - 150 - this.state.windowWidth / 25 + 'px'}}
                                onChange={this.messageChange} value={this.state.messageWaitForSend}
-                               onPressEnter = {this.sendMessage}
+                               onPressEnter={this.sendMessage}
                         />
                         <Button type={'primary'} style={{
                             float: 'right',
@@ -201,6 +204,10 @@ class SaliChat extends React.Component<{ username: string }> {
         const newList = this.state.userNameList;
         newList.splice(newList.indexOf(user.username), 1);
         this.setState({userNameList: newList});
+    };
+    private logout = () => {
+        this.webSocket.close();
+        ReactDOM.render(<MainPage/>, document.getElementById('root') as HTMLElement);
     }
 }
 
